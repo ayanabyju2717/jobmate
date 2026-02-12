@@ -23,7 +23,7 @@ A Django-based marketplace where **Customers** can hire **Employees** for tempor
 |-------------|--------------------------------|
 | Backend     | Django 6.0 (Python 3.13)       |
 | Frontend    | Bootstrap 5.3 + Bootstrap Icons |
-| Database    | SQLite (development)           |
+| Database    | PostgreSQL 12+                 |
 | Auth        | Django custom `AbstractUser`   |
 
 ---
@@ -32,6 +32,7 @@ A Django-based marketplace where **Customers** can hire **Employees** for tempor
 
 - **Python 3.10+** installed
 - **pip** (comes with Python)
+- **PostgreSQL 12+** installed and running
 - **Git** (optional, for cloning)
 
 ---
@@ -45,7 +46,20 @@ git clone <your-repo-url>
 cd job-mate
 ```
 
-### 2. Create a Virtual Environment
+### 2. Create PostgreSQL Database
+
+Open PostgreSQL command line (psql) or use pgAdmin:
+
+```sql
+CREATE DATABASE jobmate_db;
+CREATE USER jobmate_user WITH PASSWORD 'your_secure_password';
+ALTER ROLE jobmate_user SET client_encoding TO 'utf8';
+ALTER ROLE jobmate_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE jobmate_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE jobmate_db TO jobmate_user;
+```
+
+### 3. Create a Virtual Environment
 
 ```bash
 # Windows
@@ -57,20 +71,47 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 4. Install Dependencies
 
 ```bash
-pip install django Pillow
+pip install -r requirements.txt
 ```
 
-### 4. Run Migrations
+Or install manually:
+```bash
+pip install django Pillow psycopg2-binary python-decouple
+```
+
+### 5. Configure Environment Variables
+
+Copy the example environment file and update it with your database credentials:
+
+```bash
+# Windows
+copy .env.example .env
+
+# macOS / Linux
+cp .env.example .env
+```
+
+Edit `.env` and update the database settings:
+
+```env
+DB_NAME=jobmate_db
+DB_USER=jobmate_user
+DB_PASSWORD=your_secure_password
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+### 6. Run Migrations
 
 ```bash
 python manage.py makemigrations accounts bookings dashboard
 python manage.py migrate
 ```
 
-### 5. Create a Superuser (Admin)
+### 7. Create a Superuser (Admin)
 
 ```bash
 python manage.py createsuperuser
@@ -88,7 +129,7 @@ print('Admin role set.')
 "
 ```
 
-### 6. (Optional) Seed Demo Data
+### 8. (Optional) Seed Demo Data
 
 ```bash
 python manage.py shell -c "
@@ -105,7 +146,7 @@ print(f'{Skill.objects.count()} skills created')
 "
 ```
 
-### 7. Start the Development Server
+### 9. Start the Development Server
 
 ```bash
 python manage.py runserver
