@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Book {{ employee.get_full_name|default:employee.username }} – JobMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-4 text-center">
+                <h5>Hiring</h5>
+                <h4 class="text-primary">{{ employee.get_full_name|default:employee.username }}</h4>
+                <div class="mb-2">
+                    <span class="badge badge-{{ profile.availability }}">{{ profile.get_availability_display }}</span>
+                </div>
+                <hr>
+                <p class="small mb-1"><strong>Hourly:</strong> ${{ profile.hourly_rate }}</p>
+                <p class="small mb-1"><strong>Daily:</strong> ${{ profile.daily_rate }}</p>
+                <p class="small mb-0"><strong>Monthly:</strong> ${{ profile.monthly_rate }}</p>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card p-4">
+                <h4 class="mb-4"><i class="bi bi-calendar-plus me-2"></i>Create Booking</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ field.label }}</label>
+                        {% if field.name == 'skills_required' %}
+                        {{ field }}
+                        {% elif field.field.widget.input_type == 'textarea' or field.name == 'description' %}
+                        <textarea name="{{ field.html_name }}" class="form-control" rows="3">{{ field.value|default:'' }}</textarea>
+                        {% elif field.name == 'duration_type' %}
+                        <select name="{{ field.html_name }}" class="form-select">
+                            {% for val, label in field.field.choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="{{ field.field.widget.input_type|default:'text' }}"
+                               name="{{ field.html_name }}"
+                               value="{{ field.value|default:'' }}"
+                               class="form-control {% if field.errors %}is-invalid{% endif %}"
+                               {% if field.field.required %}required{% endif %}>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-jm w-100 mt-2">
+                        <i class="bi bi-check-circle me-1"></i>Submit Booking
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

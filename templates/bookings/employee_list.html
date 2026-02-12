@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Find Workers – JobMate{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div style="background: linear-gradient(135deg, var(--jm-primary) 0%, #7c3aed 100%); padding: 2.5rem 0;">
+    <div class="container">
+        <h3 class="text-white fw-bold mb-3"><i class="bi bi-people-fill me-2"></i>Find Workers</h3>
+        <form method="get" class="row g-2">
+            <div class="col-md-8 col-lg-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0" style="border-radius:.625rem 0 0 .625rem;">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-0 shadow-none"
+                           placeholder="Search by skill, location, or name…"
+                           style="border-radius:0 .625rem .625rem 0;">
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-accent px-4">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if query %}
+    <p class="text-muted mb-4">Showing results for "<strong>{{ query }}</strong>"</p>
+    {% endif %}
+
+    <div class="row g-4">
+        {% for item in results %}
+        {% with profile=item.profile %}
+        <div class="col-sm-6 col-lg-4">
+            <div class="card h-100 hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if profile.user.profile_picture %}
+                        <img src="{{ profile.user.profile_picture.url }}" class="rounded-circle me-3 shadow-sm" width="55" height="55" style="object-fit:cover;" alt="">
+                        {% else %}
+                        <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center me-3" style="width:55px;height:55px;">
+                            <i class="bi bi-person-fill fs-4 text-primary"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="fw-bold mb-0">{{ profile.user.get_full_name|default:profile.user.username }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt-fill text-danger" style="font-size:.65rem;"></i>
+                                {{ profile.user.city|default:"—" }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge badge-{{ profile.availability }} me-1">{{ profile.get_availability_display }}</span>
+                        {% if profile.is_verified %}<span class="badge bg-primary"><i class="bi bi-patch-check-fill"></i></span>{% endif %}
+                    </div>
+                    {% if item.score is not None %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted fw-semibold">AI Match Score</small>
+                            <small class="fw-bold text-primary">{{ item.score }}</small>
+                        </div>
+                        <div class="progress" style="height:6px;border-radius:3px;">
+                            <div class="progress-bar" style="width:{% widthratio item.score 1 100 %}%;background:linear-gradient(90deg, var(--jm-primary), var(--jm-accent));border-radius:3px;"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mb-2">
+                        {% for s in profile.skills.all|slice:":4" %}
+                        <span class="badge badge-skill mb-1">{{ s.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="star">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= profile.avg_rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                            {% endfor %}
+                            <small class="text-muted ms-1">({{ profile.avg_rating }})</small>
+                        </span>
+                        <small class="text-muted fw-semibold">${{ profile.hourly_rate }}/hr</small>
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2 p-3">
+                    <a href="{% url 'employee_public_profile' profile.user.pk %}" class="btn btn-sm btn-outline-primary flex-fill">View</a>
+                    {% if user.is_authenticated and user.is_customer %}
+                    <a href="{% url 'create_booking' profile.user.pk %}" class="btn btn-sm btn-jm flex-fill">Hire</a>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={% url 'create_booking' profile.user.pk %}" class="btn btn-sm btn-jm flex-fill">Hire</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-emoji-frown display-3 text-muted"></i>
+            <p class="mt-3 text-muted">No employees found. Try a different search.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

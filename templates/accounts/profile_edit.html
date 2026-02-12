@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile – JobMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card p-4">
+                <h4 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Profile</h4>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <h6 class="text-muted">Account Information</h6>
+                    {% for field in user_form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ field.label }}</label>
+                        {% if field.field.widget.input_type == 'file' %}
+                        <input type="file" name="{{ field.html_name }}" class="form-control">
+                        {% elif field.field.widget.input_type == 'textarea' %}
+                        <textarea name="{{ field.html_name }}" class="form-control" rows="3">{{ field.value|default:'' }}</textarea>
+                        {% else %}
+                        <input type="{{ field.field.widget.input_type|default:'text' }}"
+                               name="{{ field.html_name }}"
+                               value="{{ field.value|default:'' }}"
+                               class="form-control {% if field.errors %}is-invalid{% endif %}">
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <hr>
+                    <h6 class="text-muted">Role-Specific Details</h6>
+                    {% for field in profile_form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-jm w-100 mt-2">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

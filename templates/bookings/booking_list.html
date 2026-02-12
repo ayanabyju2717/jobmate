@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}My Bookings – JobMate{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, var(--jm-primary) 0%, #7c3aed 100%); padding: 2.5rem 0;">
+    <div class="container">
+        <h3 class="text-white fw-bold mb-0"><i class="bi bi-journal-text me-2"></i>My Bookings</h3>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if bookings %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>{% if user.is_customer %}Employee{% else %}Customer{% endif %}</th>
+                        <th>Duration</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <td class="fw-semibold text-muted">{{ b.pk }}</td>
+                        <td class="fw-semibold">{{ b.title }}</td>
+                        <td>
+                            {% if user.is_customer %}
+                            {{ b.employee.get_full_name|default:b.employee.username }}
+                            {% else %}
+                            {{ b.customer.get_full_name|default:b.customer.username }}
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ b.duration_value }} {{ b.get_duration_type_display }}</span></td>
+                        <td class="fw-bold text-primary">${{ b.total_cost }}</td>
+                        <td>
+                            <span class="badge
+                                {% if b.status == 'completed' %}bg-success
+                                {% elif b.status == 'pending' %}bg-warning text-dark
+                                {% elif b.status == 'accepted' %}bg-info
+                                {% elif b.status == 'in_progress' %}bg-primary
+                                {% elif b.status == 'rejected' or b.status == 'cancelled' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ b.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">{{ b.created_at|date:"M d, Y" }}</td>
+                        <td><a href="{% url 'booking_detail' b.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="avatar-placeholder rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;">
+            <i class="bi bi-inbox fs-1 text-primary"></i>
+        </div>
+        <h5 class="fw-bold mb-2">No bookings yet</h5>
+        <p class="text-muted mb-3">You haven't created any bookings yet.</p>
+        {% if user.is_customer %}
+        <a href="{% url 'employee_list' %}" class="btn btn-jm"><i class="bi bi-search me-1"></i>Find Workers</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

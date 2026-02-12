@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Profile – JobMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-4 text-center">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" class="rounded-circle mx-auto mb-3" width="120" height="120" alt="">
+                {% else %}
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width:120px;height:120px;">
+                    <i class="bi bi-person-fill display-4 text-secondary"></i>
+                </div>
+                {% endif %}
+                <h4>{{ user.get_full_name|default:user.username }}</h4>
+                <span class="badge bg-primary mb-2">{{ user.get_role_display }}</span>
+                <p class="text-muted small"><i class="bi bi-envelope"></i> {{ user.email }}</p>
+                {% if user.phone %}<p class="text-muted small"><i class="bi bi-telephone"></i> {{ user.phone }}</p>{% endif %}
+                {% if user.city %}<p class="text-muted small"><i class="bi bi-geo-alt"></i> {{ user.city }}</p>{% endif %}
+                <a href="{% url 'profile_edit' %}" class="btn btn-sm btn-outline-primary mt-2">Edit Profile</a>
+            </div>
+        </div>
+        <div class="col-md-8">
+            {% if user.is_employee and profile %}
+            <div class="card p-4 mb-4">
+                <h5><i class="bi bi-briefcase me-2"></i>Employee Details</h5>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Availability:</strong></div>
+                    <div class="col-sm-8">
+                        <span class="badge badge-{{ profile.availability }}">{{ profile.get_availability_display }}</span>
+                        {% if profile.is_verified %}<span class="badge bg-primary ms-1"><i class="bi bi-patch-check-fill"></i> Verified</span>{% endif %}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Rating:</strong></div>
+                    <div class="col-sm-8">
+                        <span class="star">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= profile.avg_rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                            {% endfor %}
+                        </span>
+                        ({{ profile.avg_rating }}/5) &bull; {{ profile.total_jobs }} jobs
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Rates:</strong></div>
+                    <div class="col-sm-8">${{ profile.hourly_rate }}/hr &bull; ${{ profile.daily_rate }}/day &bull; ${{ profile.monthly_rate }}/mo</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Experience:</strong></div>
+                    <div class="col-sm-8">{{ profile.experience_years }} years</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Skills:</strong></div>
+                    <div class="col-sm-8">
+                        {% for s in skills %}
+                        <span class="badge bg-light text-dark border">{{ s.name }}</span>
+                        {% empty %}
+                        <span class="text-muted">No skills added</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if profile.bio %}
+                <div class="mt-3">
+                    <strong>Bio:</strong>
+                    <p class="mt-1">{{ profile.bio }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% elif user.is_customer and profile %}
+            <div class="card p-4">
+                <h5><i class="bi bi-person-badge me-2"></i>Customer Details</h5>
+                <hr>
+                {% if profile.company_name %}
+                <p><strong>Company:</strong> {{ profile.company_name }}</p>
+                {% endif %}
+                <p><strong>Total Bookings:</strong> {{ profile.total_bookings }}</p>
+                <p><strong>Total Spent:</strong> ${{ profile.total_spent }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

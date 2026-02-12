@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ emp_user.get_full_name|default:emp_user.username }} – JobMate{% endblock %}
+
+{% block content %}
+<!-- Profile Header Banner -->
+<div style="background: linear-gradient(135deg, var(--jm-primary) 0%, #7c3aed 100%); padding: 3rem 0 5rem; margin-bottom: -4rem;">
+    <div class="container text-center text-white">
+        <h2 class="fw-bold">Worker Profile</h2>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- Sidebar Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card p-4 text-center" style="margin-top: 0;">
+                {% if emp_user.profile_picture %}
+                <img src="{{ emp_user.profile_picture.url }}" class="rounded-circle mx-auto mb-3 border border-3 border-white shadow" width="130" height="130" style="object-fit:cover;" alt="">
+                {% else %}
+                <div class="avatar-placeholder rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3 shadow" style="width:130px;height:130px;">
+                    <i class="bi bi-person-fill display-3 text-primary"></i>
+                </div>
+                {% endif %}
+                <h4 class="fw-bold mb-1">{{ emp_user.get_full_name|default:emp_user.username }}</h4>
+                <div class="mb-2">
+                    <span class="badge badge-{{ profile.availability }} me-1">
+                        <i class="bi bi-circle-fill me-1" style="font-size:.5rem;vertical-align:middle;"></i>{{ profile.get_availability_display }}
+                    </span>
+                    {% if profile.is_verified %}
+                    <span class="badge bg-primary">
+                        <i class="bi bi-patch-check-fill me-1"></i>Verified
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ emp_user.city|default:"Location not set" }}
+                </p>
+
+                <!-- Rating -->
+                <div class="mb-3 p-3 rounded-3" style="background: linear-gradient(135deg, #fef9c3, #fef3c7);">
+                    <div class="star mb-1" style="font-size: 1.25rem;">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= profile.avg_rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="fw-bold text-dark">{{ profile.avg_rating }}/5</span>
+                    <span class="text-muted small"> &bull; {{ profile.total_jobs }} jobs</span>
+                </div>
+
+                <p class="mb-3 small">
+                    <i class="bi bi-clock-history text-primary"></i>
+                    <strong>{{ profile.experience_years }}</strong> years experience
+                </p>
+
+                <!-- BOOKING BUTTON — always visible -->
+                {% if user.is_authenticated and user.is_customer %}
+                <a href="{% url 'create_booking' emp_user.pk %}" class="btn btn-jm btn-lg w-100 mb-2">
+                    <i class="bi bi-calendar-plus me-1"></i>Hire Now
+                </a>
+                {% elif user.is_authenticated and user.is_employee %}
+                <div class="alert alert-info py-2 small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>Sign in as a customer to book.
+                </div>
+                {% else %}
+                <a href="{% url 'login' %}?next={% url 'employee_public_profile' emp_user.pk %}" class="btn btn-jm btn-lg w-100 mb-2">
+                    <i class="bi bi-calendar-plus me-1"></i>Hire Now
+                </a>
+                <p class="text-muted small mb-0">Login or <a href="{% url 'signup' %}">sign up</a> to book</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <!-- About -->
+            <div class="card p-4 mb-4">
+                <h5 class="section-title"><i class="bi bi-person-lines-fill me-2 text-primary"></i>About</h5>
+                <p class="mt-3 mb-0">{{ profile.bio|default:"No bio provided." }}</p>
+            </div>
+
+            <!-- Skills -->
+            <div class="card p-4 mb-4">
+                <h5 class="section-title"><i class="bi bi-tools me-2 text-primary"></i>Skills</h5>
+                <div class="mt-3">
+                    {% for s in profile.skills.all %}
+                    <span class="badge badge-skill me-1 mb-2 px-3 py-2" style="font-size: .85rem;">
+                        <i class="bi bi-check-circle me-1"></i>{{ s.name }}
+                    </span>
+                    {% empty %}
+                    <p class="text-muted mb-0">No skills listed.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Rates -->
+            <div class="card p-4">
+                <h5 class="section-title"><i class="bi bi-cash-stack me-2 text-primary"></i>Pricing</h5>
+                <div class="row text-center mt-3 g-3">
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background: var(--jm-primary-light);">
+                            <i class="bi bi-clock text-primary d-block mb-1" style="font-size:1.5rem;"></i>
+                            <h4 class="text-gradient fw-bold mb-0">${{ profile.hourly_rate }}</h4>
+                            <small class="text-muted fw-semibold">per hour</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background: var(--jm-primary-light);">
+                            <i class="bi bi-sun text-primary d-block mb-1" style="font-size:1.5rem;"></i>
+                            <h4 class="text-gradient fw-bold mb-0">${{ profile.daily_rate }}</h4>
+                            <small class="text-muted fw-semibold">per day</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background: var(--jm-primary-light);">
+                            <i class="bi bi-calendar3 text-primary d-block mb-1" style="font-size:1.5rem;"></i>
+                            <h4 class="text-gradient fw-bold mb-0">${{ profile.monthly_rate }}</h4>
+                            <small class="text-muted fw-semibold">per month</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Home – JobMate{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero text-center">
+    <div class="container">
+        <p class="text-uppercase small fw-bold mb-3" style="letter-spacing:.15em;opacity:.7;">
+            <i class="bi bi-stars me-1"></i> AI-Powered Hiring Platform
+        </p>
+        <h1 class="display-4 fw-bold mb-3" style="letter-spacing:-.03em;">
+            Hire the Right Talent,<br>
+            <span style="background: linear-gradient(90deg, #a5f3fc, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Instantly.</span>
+        </h1>
+        <p class="lead mb-4 mx-auto" style="max-width:600px;">
+            AI-powered matching connects you with skilled workers for hourly, daily, or monthly tasks.
+        </p>
+        <form method="get" action="{% url 'home' %}" class="row g-2 justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white border-0" style="border-radius:.625rem 0 0 .625rem;">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-0 shadow-none"
+                           placeholder="Search by skill, location, or name…"
+                           style="border-radius:0 .625rem .625rem 0;">
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-accent btn-lg px-4">
+                    Search
+                </button>
+            </div>
+        </form>
+        <!-- Quick stats -->
+        <div class="row justify-content-center mt-5 g-3">
+            <div class="col-auto">
+                <div class="d-flex align-items-center" style="opacity:.85;">
+                    <i class="bi bi-people-fill me-2 fs-5"></i>
+                    <span class="fw-semibold">100+ Workers</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex align-items-center" style="opacity:.85;">
+                    <i class="bi bi-shield-check me-2 fs-5"></i>
+                    <span class="fw-semibold">Verified Pros</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex align-items-center" style="opacity:.85;">
+                    <i class="bi bi-lightning-charge-fill me-2 fs-5"></i>
+                    <span class="fw-semibold">AI Matching</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    {% if query %}
+    <h4 class="section-title mb-4">Results for "{{ query }}"</h4>
+    {% else %}
+    <h4 class="section-title mb-4">Top-Rated Workers</h4>
+    {% endif %}
+
+    <div class="row g-4">
+        {% for profile in profiles %}
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="card h-100 hover-lift">
+                <div class="card-body text-center p-4">
+                    {% if profile.user.profile_picture %}
+                    <img src="{{ profile.user.profile_picture.url }}" class="rounded-circle mb-3 shadow-sm border border-2 border-white" width="80" height="80" style="object-fit:cover;" alt="">
+                    {% else %}
+                    <div class="avatar-placeholder rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;">
+                        <i class="bi bi-person-fill fs-1 text-primary"></i>
+                    </div>
+                    {% endif %}
+                    <h6 class="fw-bold mb-1">{{ profile.user.get_full_name|default:profile.user.username }}</h6>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-geo-alt-fill text-danger" style="font-size:.7rem;"></i> {{ profile.user.city|default:"—" }}
+                    </p>
+                    <div class="mb-2">
+                        <span class="badge badge-{{ profile.availability }}">{{ profile.get_availability_display }}</span>
+                        {% if profile.is_verified %}<span class="badge bg-primary"><i class="bi bi-patch-check-fill"></i></span>{% endif %}
+                    </div>
+                    <div class="mb-2">
+                        {% for s in profile.skills.all|slice:":3" %}
+                        <span class="badge badge-skill mb-1">{{ s.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <p class="mb-1">
+                        <span class="star">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= profile.avg_rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                            {% endfor %}
+                        </span>
+                        <small class="text-muted">({{ profile.avg_rating }})</small>
+                    </p>
+                    <p class="small text-muted mb-0">${{ profile.hourly_rate }}/hr &bull; ${{ profile.daily_rate }}/day</p>
+                </div>
+                <div class="card-footer d-flex gap-2 p-3">
+                    <a href="{% url 'employee_public_profile' profile.user.pk %}" class="btn btn-sm btn-outline-primary flex-fill">View</a>
+                    {% if user.is_authenticated and user.is_customer %}
+                    <a href="{% url 'create_booking' profile.user.pk %}" class="btn btn-sm btn-jm flex-fill">Hire</a>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={% url 'create_booking' profile.user.pk %}" class="btn btn-sm btn-jm flex-fill">Hire</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-emoji-frown display-3 text-muted"></i>
+            <p class="mt-3 text-muted">No workers found. Try a different search term.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- How it Works section -->
+<div class="container pb-5">
+    <h4 class="section-title text-center mb-5" style="display:inline-block;margin:0 auto;width:100%;">
+        How It Works
+        <span style="display:block;width:3rem;height:3px;background:linear-gradient(90deg, var(--jm-primary), var(--jm-accent));border-radius:2px;margin:.75rem auto 0;"></span>
+    </h4>
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="p-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:70px;height:70px;background:var(--jm-primary-light);">
+                    <i class="bi bi-search fs-3 text-primary"></i>
+                </div>
+                <h5 class="fw-bold">1. Search</h5>
+                <p class="text-muted">Find skilled workers using our AI-powered smart search by skill, location, or name.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:70px;height:70px;background:#ecfdf5;">
+                    <i class="bi bi-calendar-plus fs-3 text-success"></i>
+                </div>
+                <h5 class="fw-bold">2. Book</h5>
+                <p class="text-muted">Choose hourly, daily, or monthly — transparent pricing with no hidden fees.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:70px;height:70px;background:#fef3c7;">
+                    <i class="bi bi-star fs-3 text-warning"></i>
+                </div>
+                <h5 class="fw-bold">3. Review</h5>
+                <p class="text-muted">Track progress in real-time and leave a review when the job is done.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

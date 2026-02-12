@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Booking #{{ booking.pk }} – JobMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Details -->
+        <div class="col-md-8">
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h4>{{ booking.title }}</h4>
+                        <p class="text-muted mb-0">Booking #{{ booking.pk }}</p>
+                    </div>
+                    <span class="badge fs-6
+                        {% if booking.status == 'completed' %}bg-success
+                        {% elif booking.status == 'pending' %}bg-warning text-dark
+                        {% elif booking.status == 'accepted' %}bg-info
+                        {% elif booking.status == 'in_progress' %}bg-primary
+                        {% elif booking.status == 'rejected' or booking.status == 'cancelled' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        {{ booking.get_status_display }}
+                    </span>
+                </div>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-sm-6">
+                        <p><strong>Customer:</strong> {{ booking.customer.get_full_name|default:booking.customer.username }}</p>
+                        <p><strong>Employee:</strong>
+                            <a href="{% url 'employee_public_profile' booking.employee.pk %}">
+                                {{ booking.employee.get_full_name|default:booking.employee.username }}
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p><strong>Duration:</strong> {{ booking.duration_value }} {{ booking.get_duration_type_display }}</p>
+                        <p><strong>Rate:</strong> ${{ booking.rate_applied }}/{{ booking.get_duration_type_display|lower }}</p>
+                    </div>
+                </div>
+                {% if booking.description %}
+                <p><strong>Description:</strong></p>
+                <p>{{ booking.description }}</p>
+                {% endif %}
+                {% if booking.location %}
+                <p><strong>Location:</strong> {{ booking.location }}</p>
+                {% endif %}
+                {% if booking.start_date %}
+                <p><strong>Start:</strong> {{ booking.start_date|date:"M d, Y" }}
+                    {% if booking.end_date %} &mdash; <strong>End:</strong> {{ booking.end_date|date:"M d, Y" }}{% endif %}
+                </p>
+                {% endif %}
+            </div>
+
+            <!-- Work Proofs -->
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Work Progress</h5>
+                    {% if user == booking.employee and booking.status in 'accepted,in_progress' %}
+                    <a href="{% url 'add_work_proof' booking.pk %}" class="btn btn-sm btn-accent">
+                        <i class="bi bi-upload me-1"></i>Upload Proof
+                    </a>
+                    {% endif %}
+                </div>
+                {% for proof in work_proofs %}
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ proof.uploaded_by.get_full_name|default:proof.uploaded_by.username }}</strong>
+                        <small class="text-muted">{{ proof.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ proof.description }}</p>
+                    {% if proof.image %}
+                    <img src="{{ proof.image.url }}" class="img-fluid rounded mt-2" style="max-height:300px;" alt="Work proof">
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted">No work proofs uploaded yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Review -->
+            <div class="card p-4">
+                <h5><i class="bi bi-chat-left-quote me-2"></i>Review</h5>
+                {% if review %}
+                <div class="border rounded p-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="star">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                            {% endfor %}
+                        </span>
+                        <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <p class="mt-2 mb-0">{{ review.comment|default:"No comment." }}</p>
+                </div>
+                {% elif booking.status == 'completed' and user == booking.customer %}
+                <a href="{% url 'add_review' booking.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Leave a Review
+                </a>
+                {% else %}
+                <p class="text-muted">No review yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-md-4">
+            <div class="card p-4 mb-4">
+                <h5 class="text-center">Total Cost</h5>
+                <h2 class="text-center text-primary">${{ booking.total_cost }}</h2>
+            </div>
+
+            {% if user == booking.employee %}
+            <div class="card p-4">
+                <h6>Actions</h6>
+                {% if booking.status == 'pending' %}
+                <a href="{% url 'booking_action' booking.pk 'accept' %}" class="btn btn-success w-100 mb-2">
+                    <i class="bi bi-check-lg me-1"></i>Accept
+                </a>
+                <a href="{% url 'booking_action' booking.pk 'reject' %}" class="btn btn-danger w-100">
+                    <i class="bi bi-x-lg me-1"></i>Reject
+                </a>
+                {% elif booking.status == 'accepted' %}
+                <a href="{% url 'booking_action' booking.pk 'start' %}" class="btn btn-primary w-100">
+                    <i class="bi bi-play-fill me-1"></i>Start Work
+                </a>
+                {% elif booking.status == 'in_progress' %}
+                <a href="{% url 'booking_action' booking.pk 'complete' %}" class="btn btn-success w-100">
+                    <i class="bi bi-check-circle me-1"></i>Mark Complete
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if booking.status == 'pending' and user == booking.customer %}
+            <div class="card p-4">
+                <a href="{% url 'booking_action' booking.pk 'cancel' %}" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-x-circle me-1"></i>Cancel Booking
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

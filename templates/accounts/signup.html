@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Sign Up – JobMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-5">
+            <div class="text-center mb-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:70px;height:70px;background:var(--jm-primary-light);">
+                    <i class="bi bi-person-plus-fill fs-2 text-primary"></i>
+                </div>
+                <h3 class="fw-bold">Create Account</h3>
+                <p class="text-muted">Join JobMate as a worker or customer</p>
+            </div>
+            <div class="card p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ field.label }}</label>
+                        {% if field.field.widget.input_type == 'select' or field.name == 'role' %}
+                        <select name="{{ field.html_name }}" class="form-select" {% if field.field.required %}required{% endif %}>
+                            {% for val, label in field.field.choices %}
+                            <option value="{{ val }}" {% if field.value == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="{{ field.field.widget.input_type|default:'text' }}"
+                               name="{{ field.html_name }}"
+                               value="{{ field.value|default:'' }}"
+                               class="form-control {% if field.errors %}is-invalid{% endif %}"
+                               {% if field.field.required %}required{% endif %}
+                               placeholder="{{ field.label }}">
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-jm w-100 py-2 mt-2">
+                        <i class="bi bi-check-circle me-1"></i> Sign Up
+                    </button>
+                </form>
+                <div class="text-center mt-3">
+                    <span class="text-muted">Already have an account?</span>
+                    <a href="{% url 'login' %}" class="fw-semibold text-decoration-none"> Log in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
